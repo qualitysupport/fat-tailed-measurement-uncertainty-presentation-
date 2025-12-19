@@ -1,0 +1,61 @@
+#The measurement system itself has compponents of uncertainty which can be identified and quantified individually through various testing. 
+
+
+#Type A Uncertainty 
+
+#Precision 
+
+precision_test_sample_1 <- 19.70
+precision_test_sample_2 <- 19.70
+precision_test_sample_3 <- 19.70
+precision_test_sample_4 <- 19.70
+precision_test_sample_5 <- 19.70
+
+#degrees of freedom = 5
+
+#Linearity Test 
+
+#units of measurement are gallons per minute. 
+units_of_measure <- gpm
+
+5gpm <- 4.984
+10gpm <- 9.990
+16gpm <- 15.998
+22gpm <- 22.100
+27gpm <- 27.053
+
+#Calibration Uncertainty
+
+calibration_uncertainty <- 1.6e-003
+
+nominal <- 19.70
+
+residual_standard_deviation <- .1
+
+lineraity_dof <- 4
+
+# 95% confidence with 4 degrees of freedom, expanded uncertainty is .2776
+# 95% cofidence with 30 degrees of freedom, expanded uncertainty is is .2042
+
+
+#At 4 degrees of freedom and expanded uncertainty of .2776, we implement VDA5 minimum tolerance. 
+
+#minimum tolerance is calculated as +/- 1.8507
+
+#low limit <- 17.8493
+#high limit <- 21.5507
+#measurement result <- 19.7
+#expanded uncertainty <- .2776
+
+
+#At 30 degrees of freedom and expanded uncertainty of 0.2042, we can repeat the process with new minimum tolerances. 
+
+#minimum tolerance is calculated as +/- 1.3613
+
+#low limit <- 18.3387
+#high limit <- 21.0613
+#measurement result <- 19.7
+#expanded uncertainty <- .2042
+
+
+
