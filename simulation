@@ -1,0 +1,123 @@
+# Shiny App: False Reject Risk with Adjustable Tolerance ± Value
+
+library(shiny)
+library(ggplot2)
+
+ui <- fluidPage(
+  titlePanel("False Reject Risk: 4 df vs 30 df (Adjustable Tolerance)"),
+  
+  sidebarLayout(
+    sidebarPanel(
+      sliderInput("true_value",
+                  "True Value (center of tolerance band):",
+                  min = 18.0,
+                  max = 22.0,
+                  value = 20.0,
+                  step = 0.05),
+      sliderInput("tol_half",
+                  "Tolerance (± value around true value):",
+                  min = 0.1,
+                  max = 1.5,
+                  value = 1.0,
+                  step = 0.05),
+      br(),
+      tags$p("Red line = 4 df → heavier tails → higher risk"),
+      tags$p("Blue line = 30 df → lighter tails → lower risk"),
+      tags$p("Tighten the tolerance slider to see risks increase dramatically!")
+    ),
+    
+    mainPanel(
+      plotOutput("riskPlot", height = "700px"),
+      br(),
+      h4("False Reject Risks (probability of measuring a good part as bad):"),
+      verbatimTextOutput("pfr4df"),
+      verbatimTextOutput("pfr30df")
+    )
+  )
+)
+
+server <- function(input, output) {
+  
+  output$riskPlot <- renderPlot({
+    true_val <- input$true_value
+    tol_half <- input$tol_half
+    lower_tol <- true_val - tol_half
+    upper_tol <- true_val + tol_half
+    n_samples <- 100000
+    set.seed(123)
+    
+    # 4 degrees of freedom
+    df1 <- 4
+    t_crit1 <- qt(0.975, df1)
+    u1 <- 0.2776 / t_crit1
+    errors1 <- rt(n_samples, df = df1) * u1
+    meas1 <- true_val + errors1
+    
+    # 30 degrees of freedom
+    df2 <- 30
+    t_crit2 <- qt(0.975, df2)
+    u2 <- 0.2042 / t_crit2
+    errors2 <- rt(n_samples, df = df2) * u2
+    meas2 <- true_val + errors2
+    
+    data <- data.frame(
+      Measured = c(meas1, meas2),
+      Case = factor(rep(c("4 df (heavy tails)", "30 df (light tails)"), each = n_samples))
+    )
+    
+    ggplot(data, aes(x = Measured, color = Case)) +
+      geom_density(size = 2.2, adjust = 1.2) +
+      geom_vline(xintercept = c(lower_tol, upper_tol), color = "black", linetype = "dashed", size = 1.2) +
+      coord_cartesian(xlim = c(true_val - 2.5 * tol_half, true_val + 2.5 * tol_half)) +  # Auto-zoom based on tolerance
+      labs(title = paste("Measurement Distributions — True Value =", true_val, "| Tolerance ±", tol_half),
+           subtitle = "False Reject Risk = area outside the dashed tolerance band",
+           x = "Measured Value",
+           y = "Density") +
+      scale_color_manual(values = c("red", "blue")) +
+      theme_minimal(base_size = 16) +
+      theme(
+        legend.position = "top",
+        legend.title = element_blank(),
+        plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 15)
+      )
+  })
+  
+  output$pfr4df <- renderText({
+    true_val <- input$true_value
+    tol_half <- input$tol_half
+    lower_tol <- true_val - tol_half
+    upper_tol <- true_val + tol_half
+    n_samples <- 100000
+    set.seed(123)
+    
+    df1 <- 4
+    t_crit1 <- qt(0.975, df1)
+    u1 <- 0.2776 / t_crit1
+    errors1 <- rt(n_samples, df = df1) * u1
+    meas1 <- true_val + errors1
+    
+    pfr_4df <- mean(meas1 < lower_tol | meas1 > upper_tol) * 100
+    paste("False Reject Risk (4 df):", round(pfr_4df, 3), "%")
+  })
+  
+  output$pfr30df <- renderText({
+    true_val <- input$true_value
+    tol_half <- input$tol_half
+    lower_tol <- true_val - tol_half
+    upper_tol <- true_val + tol_half
+    n_samples <- 100000
+    set.seed(123)
+    
+    df2 <- 30
+    t_crit2 <- qt(0.975, df2)
+    u2 <- 0.2042 / t_crit2
+    errors2 <- rt(n_samples, df = df2) * u2
+    meas2 <- true_val + errors2
+    
+    pfr_30df <- mean(meas2 < lower_tol | meas2 > upper_tol) * 100
+    paste("False Reject Risk (30 df):", round(pfr_30df, 3), "%")
+  })
+}
+
+shinyApp(ui = ui, server = server)
