@@ -1,18 +1,3 @@
-#The measurement system itself has compponents of uncertainty which can be identified and quantified individually through various testing. 
-
-
-#Type A Uncertainty 
-
-#Precision 
-
-precision_test_sample_1 <- 19.70
-precision_test_sample_2 <- 19.70
-precision_test_sample_3 <- 19.70
-precision_test_sample_4 <- 19.70
-precision_test_sample_5 <- 19.70
-
-#degrees of freedom = 5
-
 #Linearity Test 
 
 #units of measurement are gallons per minute. 
@@ -28,7 +13,7 @@ units_of_measure <- gpm
 
 calibration_uncertainty <- 1.6e-003
 
-nominal <- 19.70
+nominal <- 20
 
 residual_standard_deviation <- .1
 
