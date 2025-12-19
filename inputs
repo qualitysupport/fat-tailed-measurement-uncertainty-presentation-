@@ -23,7 +23,7 @@ lineraity_dof <- 4
 # 95% cofidence with 30 degrees of freedom, expanded uncertainty is is .2042
 
 
-#At 4 degrees of freedom and expanded uncertainty of .2776, we implement VDA5 minimum tolerance. 
+#At 4 degrees of freedom and expanded uncertainty of .2776, we calculate VDA5 minimum tolerance. 
 
 #minimum tolerance is calculated as +/- 1.8507
 
