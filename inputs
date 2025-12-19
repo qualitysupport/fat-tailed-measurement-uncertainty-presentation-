@@ -13,7 +13,7 @@ units_of_measure <- gpm
 
 calibration_uncertainty <- 1.6e-003
 
-nominal <- 20
+nominal <- 19.7
 
 residual_standard_deviation <- .1
 
