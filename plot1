@@ -1,0 +1,142 @@
+# --------------------------------------------------------------
+#  Shiny app: Histogram of simulated measurement values
+#  (with VDA5 tolerance limits overlay)
+# --------------------------------------------------------------
+
+library(shiny)
+library(ggplot2)
+
+# ------------------------------------------------------------------
+#  Data for the two scenarios (4 df and 30 df)
+# ------------------------------------------------------------------
+scenario_data <- list(
+  "4 df" = list(
+    df          = 4,
+    expanded_unc = 0.2776,
+    min_tol      = 1.8507,
+    low_limit    = 19.7 - 1.8507,   # 17.8493
+    high_limit   = 19.7 + 1.8507    # 21.5507
+  ),
+  "30 df" = list(
+    df          = 30,
+    expanded_unc = 0.2042,
+    min_tol      = 1.3613,
+    low_limit    = 19.7 - 1.3613,   # 18.3387
+    high_limit   = 19.7 + 1.3613    # 21.0613
+  )
+)
+
+# ------------------------------------------------------------------
+#  UI
+# ------------------------------------------------------------------
+ui <- fluidPage(
+  
+  titlePanel("Histogram of simulated measurement values"),
+  
+  sidebarLayout(
+    sidebarPanel(
+      radioButtons(
+        inputId = "scenario",
+        label   = "Select degree‑of‑freedom scenario:",
+        choices = names(scenario_data),
+        selected = "4 df"
+      ),
+      sliderInput(
+        inputId = "nsim",
+        label   = "Number of simulated draws:",
+        min = 500, max = 10000, value = 2000, step = 500
+      ),
+      br(),
+      verbatimTextOutput("info")
+    ),
+    
+    mainPanel(
+      plotOutput("histPlot", height = "500px")
+    )
+  )
+)
+
+# ------------------------------------------------------------------
+#  Server
+# ------------------------------------------------------------------
+server <- function(input, output, session) {
+  
+  # Reactive object returning the currently selected scenario's list
+  cur <- reactive({ scenario_data[[input$scenario]] })
+  
+  # Show the numeric parameters for reference
+  output$info <- renderPrint({
+    s <- cur()
+    cat(
+      sprintf("Degrees of freedom   : %d\n", s$df),
+      sprintf("Expanded uncertainty : ±%.4f\n", s$expanded_unc),
+      sprintf("Minimum tolerance   : ±%.4f\n", s$min_tol),
+      sprintf("Low limit            : %.4f\n", s$low_limit),
+      sprintf("High limit           : %.4f\n", s$high_limit),
+      sprintf("Measurement result   : 19.7000\n")
+    )
+  })
+  
+  # Generate simulated data whenever scenario or sample size changes
+  sim_data <- reactive({
+    s   <- cur()
+    n   <- input$nsim
+    mu  <- 19.7
+    # Approximate sigma = expanded_unc / 2 (k≈2 for 95% CI)
+    sigma <- s$expanded_unc / 2
+    rnorm(n, mean = mu, sd = sigma)
+  })
+  
+  # Plot the histogram
+  output$histPlot <- renderPlot({
+    
+    s   <- cur()
+    dat <- sim_data()
+    
+    # Build the base histogram
+    p <- ggplot(data.frame(value = dat), aes(x = value)) +
+      geom_histogram(
+        binwidth = s$expanded_unc / 4,   # reasonable bin width
+        colour = "black", fill = "#4A90E2", alpha = 0.6
+      ) +
+      
+      # Tolerance band (light blue rectangle)
+      annotate("rect",
+               xmin = s$low_limit, xmax = s$high_limit,
+               ymin = -Inf, ymax = Inf,
+               fill = "#4A90E2", alpha = 0.15) +
+      
+      # Low / high tolerance limits (vertical lines)
+      geom_vline(xintercept = s$low_limit,
+                 colour = "blue", linetype = "solid", size = 1) +
+      geom_vline(xintercept = s$high_limit,
+                 colour = "red",  linetype = "solid", size = 1) +
+      
+      # Reported measurement result (dashed black line)
+      geom_vline(xintercept = 19.7,
+                 colour = "black", linetype = "dashed", size = 1) +
+      
+      labs(
+        x = "Simulated measurement value",
+        y = "Count",
+        title = paste0("Histogram (", input$scenario, ")"),
+        subtitle = sprintf(
+          "Mean = %.2f, σ ≈ %.4f (expanded ±%.4f)",
+          19.7, s$expanded_unc/2, s$expanded_unc
+        )
+      ) +
+      
+      theme_minimal(base_size = 14) +
+      theme(
+        plot.title    = element_text(face = "bold"),
+        plot.subtitle = element_text(margin = margin(b = 10))
+      )
+    
+    print(p)
+  })
+}
+
+# ------------------------------------------------------------------
+#  Run the app
+# ------------------------------------------------------------------
+shinyApp(ui = ui, server = server)
