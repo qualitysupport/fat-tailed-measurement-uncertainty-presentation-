@@ -10,6 +10,7 @@ An application was developed to model different tolerances and output probabilit
 A perfect operation process with no process variation would underestimate risk if the fat tail risk wasn’t quantified. 
 
 False Reject Risk (4 df): 0.776%
+
 False Reject Risk (30 df): .003%
 
 This relationship is non linear and scales differently depending on how the tolerances are set. 
